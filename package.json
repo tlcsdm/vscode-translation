@@ -47,7 +47,8 @@
         {
           "type": "webview",
           "id": "tlcsdm.translation.translationView",
-          "name": "Translation"
+          "name": "Translation",
+          "icon": "images/icon16.png"
         }
       ]
     },
