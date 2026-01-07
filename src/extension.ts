@@ -1,0 +1,202 @@
+import * as vscode from 'vscode';
+import {
+    TranslationProvider,
+    TencentTranslationProvider,
+    BaiduTranslationProvider,
+    YoudaoTranslationProvider
+} from './providers';
+import { TranslationViewProvider } from './views';
+
+// Status bar item for engine switching
+let statusBarItem: vscode.StatusBarItem;
+
+// Current translation engine
+let currentEngine = 'tencent';
+
+// Translation providers
+const providers: Map<string, TranslationProvider> = new Map();
+providers.set('tencent', new TencentTranslationProvider());
+providers.set('baidu', new BaiduTranslationProvider());
+providers.set('youdao', new YoudaoTranslationProvider());
+
+/**
+ * Get the current translation provider
+ */
+function getCurrentProvider(): TranslationProvider | undefined {
+    return providers.get(currentEngine);
+}
+
+/**
+ * Translate selected text
+ */
+async function translateSelection(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showWarningMessage('No active text editor');
+        return;
+    }
+
+    const selection = editor.selection;
+    if (selection.isEmpty) {
+        vscode.window.showWarningMessage('No text selected');
+        return;
+    }
+
+    const text = editor.document.getText(selection);
+    const provider = getCurrentProvider();
+
+    if (!provider) {
+        vscode.window.showErrorMessage('Unknown translation engine');
+        return;
+    }
+
+    const config = vscode.workspace.getConfiguration('tlcsdm.translation');
+    const from = config.get<string>('sourceLanguage', 'auto');
+    const to = config.get<string>('targetLanguage', 'zh');
+
+    try {
+        const result = await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: 'Translating...',
+                cancellable: false
+            },
+            async () => {
+                return await provider.translate(text, from, to);
+            }
+        );
+
+        // Show translation result in popup
+        const action = await vscode.window.showInformationMessage(
+            `Translation (${provider.name}): ${result}`,
+            'Copy',
+            'Replace'
+        );
+
+        if (action === 'Copy') {
+            await vscode.env.clipboard.writeText(result);
+            vscode.window.showInformationMessage('Translation copied to clipboard');
+        } else if (action === 'Replace') {
+            await editor.edit((editBuilder) => {
+                editBuilder.replace(selection, result);
+            });
+        }
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Translation failed';
+        vscode.window.showErrorMessage(message);
+    }
+}
+
+/**
+ * Show translation view
+ */
+async function showTranslationView(): Promise<void> {
+    await vscode.commands.executeCommand('workbench.view.extension.translation-explorer');
+}
+
+/**
+ * Switch translation engine
+ */
+async function switchEngine(): Promise<void> {
+    const engines = [
+        { label: '$(cloud) Tencent Cloud', description: 'Tencent Cloud Translation', value: 'tencent' },
+        { label: '$(globe) Baidu', description: 'Baidu Translation', value: 'baidu' },
+        { label: '$(book) Youdao', description: 'Youdao Translation', value: 'youdao' }
+    ];
+
+    const selected = await vscode.window.showQuickPick(engines, {
+        placeHolder: `Current: ${currentEngine.charAt(0).toUpperCase() + currentEngine.slice(1)}`,
+        title: 'Select Translation Engine'
+    });
+
+    if (selected) {
+        currentEngine = selected.value;
+        updateStatusBar();
+
+        // Update configuration
+        const config = vscode.workspace.getConfiguration('tlcsdm.translation');
+        await config.update('defaultEngine', currentEngine, vscode.ConfigurationTarget.Global);
+
+        vscode.window.showInformationMessage(`Translation engine switched to ${currentEngine}`);
+    }
+}
+
+/**
+ * Update status bar item
+ */
+function updateStatusBar(): void {
+    const engineLabels: Record<string, string> = {
+        tencent: '$(cloud) Tencent',
+        baidu: '$(globe) Baidu',
+        youdao: '$(book) Youdao'
+    };
+
+    statusBarItem.text = engineLabels[currentEngine] || currentEngine;
+    statusBarItem.tooltip = `Translation Engine: ${currentEngine.charAt(0).toUpperCase() + currentEngine.slice(1)}\nClick to switch`;
+}
+
+/**
+ * Extension activation
+ */
+export function activate(context: vscode.ExtensionContext): void {
+    // Load default engine from configuration
+    const config = vscode.workspace.getConfiguration('tlcsdm.translation');
+    currentEngine = config.get<string>('defaultEngine', 'tencent');
+
+    // Create status bar item
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.command = 'tlcsdm.translation.switchEngine';
+    updateStatusBar();
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+
+    // Register translation view provider
+    const translationViewProvider = new TranslationViewProvider(context.extensionUri);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(
+            TranslationViewProvider.viewType,
+            translationViewProvider
+        )
+    );
+
+    // Register commands
+    const translateSelectionCmd = vscode.commands.registerCommand(
+        'tlcsdm.translation.translateSelection',
+        translateSelection
+    );
+
+    const showTranslationViewCmd = vscode.commands.registerCommand(
+        'tlcsdm.translation.showTranslationView',
+        showTranslationView
+    );
+
+    const switchEngineCmd = vscode.commands.registerCommand(
+        'tlcsdm.translation.switchEngine',
+        switchEngine
+    );
+
+    context.subscriptions.push(translateSelectionCmd, showTranslationViewCmd, switchEngineCmd);
+
+    // Listen for configuration changes
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('tlcsdm.translation.defaultEngine')) {
+                const newEngine = vscode.workspace.getConfiguration('tlcsdm.translation')
+                    .get<string>('defaultEngine', 'tencent');
+                if (newEngine !== currentEngine) {
+                    currentEngine = newEngine;
+                    updateStatusBar();
+                }
+            }
+        })
+    );
+
+    console.log('Translation extension is now active');
+}
+
+/**
+ * Extension deactivation
+ */
+export function deactivate(): void {
+    // Clean up resources
+}

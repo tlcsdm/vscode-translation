@@ -1,0 +1,200 @@
+{
+  "name": "vscode-translation",
+  "displayName": "Translation",
+  "description": "Translation plugin supporting Tencent Cloud, Baidu, and Youdao translation APIs",
+  "version": "1.0.0",
+  "publisher": "unknowIfGuestInDream",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tlcsdm/vscode-translation"
+  },
+  "bugs": {
+    "url": "https://github.com/tlcsdm/vscode-translation/issues"
+  },
+  "homepage": "https://github.com/tlcsdm/vscode-translation#readme",
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "translation",
+    "translate",
+    "tencent",
+    "baidu",
+    "youdao",
+    "chinese"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "translation-explorer",
+          "title": "Translation",
+          "icon": "images/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "translation-explorer": [
+        {
+          "type": "webview",
+          "id": "tlcsdm.translation.translationView",
+          "name": "Translation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "tlcsdm.translation.translateSelection",
+        "title": "Translate"
+      },
+      {
+        "command": "tlcsdm.translation.showTranslationView",
+        "title": "Translation: Show Translation View"
+      },
+      {
+        "command": "tlcsdm.translation.switchEngine",
+        "title": "Translation: Switch Engine"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "tlcsdm.submenu",
+        "label": "tlcsdm"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "tlcsdm.submenu",
+          "group": "tlcsdm"
+        }
+      ],
+      "tlcsdm.submenu": [
+        {
+          "command": "tlcsdm.translation.translateSelection",
+          "when": "editorHasSelection",
+          "group": "translation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "tlcsdm.translation.translateSelection",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t",
+        "when": "editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "Translation",
+      "properties": {
+        "tlcsdm.translation.defaultEngine": {
+          "type": "string",
+          "default": "tencent",
+          "enum": [
+            "tencent",
+            "baidu",
+            "youdao"
+          ],
+          "enumDescriptions": [
+            "Tencent Cloud Translation",
+            "Baidu Translation",
+            "Youdao Translation"
+          ],
+          "description": "Default translation engine"
+        },
+        "tlcsdm.translation.sourceLanguage": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "zh",
+            "en",
+            "ja"
+          ],
+          "enumDescriptions": [
+            "Auto detect",
+            "Chinese",
+            "English",
+            "Japanese"
+          ],
+          "description": "Source language for translation"
+        },
+        "tlcsdm.translation.targetLanguage": {
+          "type": "string",
+          "default": "zh",
+          "enum": [
+            "zh",
+            "en",
+            "ja"
+          ],
+          "enumDescriptions": [
+            "Chinese",
+            "English",
+            "Japanese"
+          ],
+          "description": "Target language for translation"
+        },
+        "tlcsdm.translation.tencent.secretId": {
+          "type": "string",
+          "default": "",
+          "description": "Tencent Cloud SecretId"
+        },
+        "tlcsdm.translation.tencent.secretKey": {
+          "type": "string",
+          "default": "",
+          "description": "Tencent Cloud SecretKey"
+        },
+        "tlcsdm.translation.baidu.appId": {
+          "type": "string",
+          "default": "",
+          "description": "Baidu Translation API App ID"
+        },
+        "tlcsdm.translation.baidu.secretKey": {
+          "type": "string",
+          "default": "",
+          "description": "Baidu Translation API Secret Key"
+        },
+        "tlcsdm.translation.youdao.appKey": {
+          "type": "string",
+          "default": "",
+          "description": "Youdao Translation API App Key"
+        },
+        "tlcsdm.translation.youdao.appSecret": {
+          "type": "string",
+          "default": "",
+          "description": "Youdao Translation API App Secret"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test --config ./.vscode-test.json"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.107.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.2",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2"
+  },
+  "license": "MIT"
+}
