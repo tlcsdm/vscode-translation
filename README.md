@@ -120,7 +120,6 @@ npm run test
 ## Related Projects
 
 * [eclipse-translation](https://github.com/tlcsdm/eclipse-translation) - Eclipse version of this plugin
-* [vscode-fixcnchar](https://github.com/tlcsdm/vscode-fixcnchar) - Fix Chinese punctuation plugin
 
 ## License
 

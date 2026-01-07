@@ -97,11 +97,26 @@ async function showTranslationView(): Promise<void> {
 /**
  * Switch translation engine
  */
-async function switchEngine(): Promise<void> {
-    const engines = [
-        { label: '$(cloud) Tencent Cloud', description: 'Tencent Cloud Translation', value: 'tencent' },
-        { label: '$(globe) Baidu', description: 'Baidu Translation', value: 'baidu' },
-        { label: '$(book) Youdao', description: 'Youdao Translation', value: 'youdao' }
+async function switchEngine(context: vscode.ExtensionContext): Promise<void> {
+    const engines: (vscode.QuickPickItem & { value: string })[] = [
+        { 
+            label: 'Tencent Cloud', 
+            description: 'Tencent Cloud Translation', 
+            value: 'tencent',
+            iconPath: vscode.Uri.joinPath(context.extensionUri, 'images', 'tencent.png')
+        },
+        { 
+            label: 'Baidu', 
+            description: 'Baidu Translation', 
+            value: 'baidu',
+            iconPath: vscode.Uri.joinPath(context.extensionUri, 'images', 'baidu.png')
+        },
+        { 
+            label: 'Youdao', 
+            description: 'Youdao Translation', 
+            value: 'youdao',
+            iconPath: vscode.Uri.joinPath(context.extensionUri, 'images', 'youdao.png')
+        }
     ];
 
     const selected = await vscode.window.showQuickPick(engines, {
@@ -172,7 +187,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const switchEngineCmd = vscode.commands.registerCommand(
         'tlcsdm.translation.switchEngine',
-        switchEngine
+        () => switchEngine(context)
     );
 
     context.subscriptions.push(translateSelectionCmd, showTranslationViewCmd, switchEngineCmd);
