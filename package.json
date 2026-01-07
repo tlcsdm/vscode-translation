@@ -1,5 +1,5 @@
 {
-  "name": "vscode-translation",
+  "name": "tlcsdm-translation",
   "displayName": "Translation",
   "description": "Translation plugin supporting Tencent Cloud, Baidu, and Youdao translation APIs",
   "version": "1.0.0",
