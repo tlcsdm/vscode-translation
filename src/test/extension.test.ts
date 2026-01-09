@@ -21,7 +21,7 @@ suite('Extension Test Suite', () => {
     test('Configuration should have default values', () => {
         const config = vscode.workspace.getConfiguration('tlcsdm.translation');
         const defaultEngine = config.get<string>('defaultEngine');
-        assert.strictEqual(defaultEngine, 'tencent');
+        assert.strictEqual(defaultEngine, 'baidu');
 
         const sourceLanguage = config.get<string>('sourceLanguage');
         assert.strictEqual(sourceLanguage, 'auto');
