@@ -34,6 +34,11 @@ function getCurrentProvider(): TranslationProvider | undefined {
  */
 function clearTranslationDecoration(): void {
     if (translationDecorationType) {
+        // Clear decorations from the editor first
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            editor.setDecorations(translationDecorationType, []);
+        }
         translationDecorationType.dispose();
         translationDecorationType = undefined;
     }
@@ -95,9 +100,10 @@ async function translateSelection(): Promise<void> {
 
         // Apply decoration to the line containing the end of selection
         const endLine = selection.end.line;
+        const lineLength = editor.document.lineAt(endLine).text.length;
         const decorationRange = new vscode.Range(
-            new vscode.Position(endLine, editor.document.lineAt(endLine).text.length),
-            new vscode.Position(endLine, editor.document.lineAt(endLine).text.length)
+            new vscode.Position(endLine, 0),
+            new vscode.Position(endLine, lineLength)
         );
 
         editor.setDecorations(translationDecorationType, [decorationRange]);
