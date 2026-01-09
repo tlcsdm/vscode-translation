@@ -19,8 +19,12 @@ providers.set('tencent', new TencentTranslationProvider());
 providers.set('baidu', new BaiduTranslationProvider());
 providers.set('youdao', new YoudaoTranslationProvider());
 
-// Decoration type for inline translation display
+// Decoration type for tooltip-style translation popup display
 let translationDecorationType: vscode.TextEditorDecorationType | undefined;
+
+// Constants for translation popup styling
+const POPUP_ARROW_INDICATOR = '▼';
+const POPUP_MARGIN = '0 0 0 0.5em';
 
 /**
  * Get the current translation provider
@@ -87,24 +91,22 @@ async function translateSelection(): Promise<void> {
         // Clear any previous translation decoration
         clearTranslationDecoration();
 
-        // Create decoration type for inline display below selection
+        // Create decoration type for tooltip-style popup display
+        // Use after decoration with styling to create a floating popup appearance
         translationDecorationType = vscode.window.createTextEditorDecorationType({
             after: {
-                contentText: result,
-                color: new vscode.ThemeColor('editorInfo.foreground'),
-                fontStyle: 'italic',
-                margin: '0 0 0 1em'
-            },
-            isWholeLine: true
+                contentText: ` ${POPUP_ARROW_INDICATOR} ${result}`,
+                color: new vscode.ThemeColor('editorHoverWidget.foreground'),
+                backgroundColor: new vscode.ThemeColor('editorHoverWidget.background'),
+                border: '1px solid',
+                borderColor: new vscode.ThemeColor('editorHoverWidget.border'),
+                margin: POPUP_MARGIN
+            }
         });
 
-        // Apply decoration to the line containing the end of selection
-        const endLine = selection.end.line;
-        const lineLength = editor.document.lineAt(endLine).text.length;
-        const decorationRange = new vscode.Range(
-            new vscode.Position(endLine, 0),
-            new vscode.Position(endLine, lineLength)
-        );
+        // Apply decoration at the end of the selection to appear like a floating popup
+        const endPosition = selection.end;
+        const decorationRange = new vscode.Range(endPosition, endPosition);
 
         editor.setDecorations(translationDecorationType, [decorationRange]);
     } catch (error) {
