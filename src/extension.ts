@@ -6,6 +6,7 @@ import {
     YoudaoTranslationProvider
 } from './providers';
 import { TranslationViewProvider } from './views';
+import { SecretStorageManager, promptForCredentials } from './secrets';
 
 // Status bar item for engine switching
 let statusBarItem: vscode.StatusBarItem;
@@ -123,6 +124,41 @@ async function showTranslationView(): Promise<void> {
 }
 
 /**
+ * Configure API keys for translation engines
+ */
+async function configureApiKeys(): Promise<void> {
+    const engines: (vscode.QuickPickItem & { value: 'tencent' | 'baidu' | 'youdao' })[] = [
+        { 
+            label: '$(cloud) Tencent Cloud', 
+            description: 'Configure Tencent Cloud Translation credentials', 
+            value: 'tencent'
+        },
+        { 
+            label: '$(globe) Baidu', 
+            description: 'Configure Baidu Translation credentials', 
+            value: 'baidu'
+        },
+        { 
+            label: '$(book) Youdao', 
+            description: 'Configure Youdao Translation credentials', 
+            value: 'youdao'
+        }
+    ];
+
+    const selected = await vscode.window.showQuickPick(engines, {
+        placeHolder: 'Select translation engine to configure',
+        title: 'Configure API Keys'
+    });
+
+    if (selected) {
+        const success = await promptForCredentials(selected.value);
+        if (success) {
+            vscode.window.showInformationMessage(`${selected.label.replace(/\$\([^)]+\)\s*/, '')} credentials configured successfully.`);
+        }
+    }
+}
+
+/**
  * Switch translation engine
  */
 async function switchEngine(context: vscode.ExtensionContext): Promise<void> {
@@ -182,6 +218,9 @@ function updateStatusBar(): void {
  * Extension activation
  */
 export function activate(context: vscode.ExtensionContext): void {
+    // Initialize secret storage manager for secure credential storage
+    SecretStorageManager.initialize(context);
+
     // Load default engine from configuration
     const config = vscode.workspace.getConfiguration('tlcsdm.translation');
     currentEngine = config.get<string>('defaultEngine', 'baidu');
@@ -218,7 +257,12 @@ export function activate(context: vscode.ExtensionContext): void {
         () => switchEngine(context)
     );
 
-    context.subscriptions.push(translateSelectionCmd, showTranslationViewCmd, switchEngineCmd);
+    const configureApiKeysCmd = vscode.commands.registerCommand(
+        'tlcsdm.translation.configureApiKeys',
+        configureApiKeys
+    );
+
+    context.subscriptions.push(translateSelectionCmd, showTranslationViewCmd, switchEngineCmd, configureApiKeysCmd);
 
     // Listen for configuration changes
     context.subscriptions.push(

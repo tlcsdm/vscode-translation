@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
-import * as vscode from 'vscode';
 import { TranslationProvider, LanguageMap } from './types';
+import { SecretStorageManager } from '../secrets';
 
 interface BaiduTransResult {
     src: string;
@@ -25,13 +25,13 @@ export class BaiduTranslationProvider implements TranslationProvider {
     private static readonly API_PATH = '/api/trans/vip/translate';
 
     async translate(text: string, from: string, to: string): Promise<string> {
-        const config = vscode.workspace.getConfiguration('tlcsdm.translation.baidu');
-        const appId = config.get<string>('appId', '');
-        const secretKey = config.get<string>('secretKey', '');
+        const credentials = await SecretStorageManager.getInstance().getBaiduCredentials();
 
-        if (!appId || !secretKey) {
-            throw new Error('Baidu Translation API App ID or Secret Key not configured. Please configure in settings.');
+        if (!credentials) {
+            throw new Error('Baidu Translation API credentials not configured. Please use the "Configure API Keys" command.');
         }
+
+        const { appId, secretKey } = credentials;
 
         const sourceLanguage = LanguageMap.baidu[from] || 'auto';
         const targetLanguage = LanguageMap.baidu[to] || 'zh';

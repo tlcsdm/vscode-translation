@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
-import * as vscode from 'vscode';
 import { TranslationProvider, LanguageMap } from './types';
+import { SecretStorageManager } from '../secrets';
 
 interface YoudaoResponse {
     errorCode?: string;
@@ -21,13 +21,13 @@ export class YoudaoTranslationProvider implements TranslationProvider {
     private static readonly API_PATH = '/api';
 
     async translate(text: string, from: string, to: string): Promise<string> {
-        const config = vscode.workspace.getConfiguration('tlcsdm.translation.youdao');
-        const appKey = config.get<string>('appKey', '');
-        const appSecret = config.get<string>('appSecret', '');
+        const credentials = await SecretStorageManager.getInstance().getYoudaoCredentials();
 
-        if (!appKey || !appSecret) {
-            throw new Error('Youdao Translation API App Key or Secret not configured. Please configure in settings.');
+        if (!credentials) {
+            throw new Error('Youdao Translation API credentials not configured. Please use the "Configure API Keys" command.');
         }
+
+        const { appKey, appSecret } = credentials;
 
         const sourceLanguage = LanguageMap.youdao[from] || 'auto';
         const targetLanguage = LanguageMap.youdao[to] || 'zh-CHS';
