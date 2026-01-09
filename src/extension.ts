@@ -54,7 +54,7 @@ function disposeDismissListeners(): void {
  * Clear any existing translation decoration
  */
 function clearTranslationDecoration(): void {
-    // First dispose the dismiss listeners to prevent recursive calls
+    // Clean up listeners before clearing the decoration
     disposeDismissListeners();
     
     if (translationDecorationType) {
@@ -175,7 +175,7 @@ async function translateSelection(): Promise<void> {
         // Track the editor that has the popup for filtering events
         translationEditorUri = editor.document.uri;
         
-        // Setup listeners to auto-dismiss the popup when focus changes
+        // Setup listeners to auto-dismiss the popup on selection, editor, or document changes
         setupDismissListeners();
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Translation failed';
