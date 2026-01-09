@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
+import * as vscode from 'vscode';
 import { TranslationProvider, LanguageMap } from './types';
-import { SecretStorageManager } from '../secrets';
 
 interface TencentResponse {
     Response: {
@@ -25,13 +25,13 @@ export class TencentTranslationProvider implements TranslationProvider {
     private static readonly HOST = 'tmt.tencentcloudapi.com';
 
     async translate(text: string, from: string, to: string): Promise<string> {
-        const credentials = await SecretStorageManager.getInstance().getTencentCredentials();
+        const config = vscode.workspace.getConfiguration('tlcsdm.translation.tencent');
+        const secretId = config.get<string>('secretId', '');
+        const secretKey = config.get<string>('secretKey', '');
 
-        if (!credentials) {
-            throw new Error('Tencent Cloud credentials not configured. Please use the "Configure API Keys" command.');
+        if (!secretId || !secretKey) {
+            throw new Error('Tencent Cloud SecretId or SecretKey not configured. Please configure in settings.');
         }
-
-        const { secretId, secretKey } = credentials;
 
         const sourceLanguage = LanguageMap.tencent[from] || 'auto';
         const targetLanguage = LanguageMap.tencent[to] || 'zh';

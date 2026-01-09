@@ -64,10 +64,6 @@
       {
         "command": "tlcsdm.translation.switchEngine",
         "title": "Translation: Switch Engine"
-      },
-      {
-        "command": "tlcsdm.translation.configureApiKeys",
-        "title": "Translation: Configure API Keys"
       }
     ],
     "submenus": [
@@ -148,6 +144,42 @@
             "Japanese"
           ],
           "description": "Target language for translation"
+        },
+        "tlcsdm.translation.tencent.secretId": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Tencent Cloud SecretId"
+        },
+        "tlcsdm.translation.tencent.secretKey": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Tencent Cloud SecretKey"
+        },
+        "tlcsdm.translation.baidu.appId": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Baidu Translation API App ID"
+        },
+        "tlcsdm.translation.baidu.secretKey": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Baidu Translation API Secret Key"
+        },
+        "tlcsdm.translation.youdao.appKey": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Youdao Translation API App Key"
+        },
+        "tlcsdm.translation.youdao.appSecret": {
+          "type": "string",
+          "format": "password",
+          "default": "",
+          "description": "Youdao Translation API App Secret"
         }
       }
     }
