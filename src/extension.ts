@@ -22,6 +22,9 @@ providers.set('youdao', new YoudaoTranslationProvider());
 // Decoration type for tooltip-style translation popup display
 let translationDecorationType: vscode.TextEditorDecorationType | undefined;
 
+// Track the editor and document that has the translation popup
+let translationEditorUri: vscode.Uri | undefined;
+
 // Disposables for auto-dismiss listeners
 let dismissListeners: vscode.Disposable[] = [];
 
@@ -63,23 +66,29 @@ function clearTranslationDecoration(): void {
         translationDecorationType.dispose();
         translationDecorationType = undefined;
     }
+    
+    // Clear the tracked editor URI
+    translationEditorUri = undefined;
 }
 
 /**
  * Setup listeners to auto-dismiss the translation popup
  * The popup will be dismissed when:
- * - Selection changes in the active editor
+ * - Selection changes in the editor with the popup
  * - Active editor changes
- * - Document content changes
+ * - Document content changes in the document with the popup
  */
 function setupDismissListeners(): void {
     // Clear any existing listeners first
     disposeDismissListeners();
     
-    // Dismiss when selection changes
+    // Dismiss when selection changes in the same editor that has the popup
     dismissListeners.push(
-        vscode.window.onDidChangeTextEditorSelection(() => {
-            clearTranslationDecoration();
+        vscode.window.onDidChangeTextEditorSelection((e) => {
+            // Only dismiss if the selection change is in the editor with the popup
+            if (translationEditorUri && e.textEditor.document.uri.toString() === translationEditorUri.toString()) {
+                clearTranslationDecoration();
+            }
         })
     );
     
@@ -90,10 +99,13 @@ function setupDismissListeners(): void {
         })
     );
     
-    // Dismiss when document content changes
+    // Dismiss when document content changes in the document with the popup
     dismissListeners.push(
-        vscode.workspace.onDidChangeTextDocument(() => {
-            clearTranslationDecoration();
+        vscode.workspace.onDidChangeTextDocument((e) => {
+            // Only dismiss if the change is in the document with the popup
+            if (translationEditorUri && e.document.uri.toString() === translationEditorUri.toString()) {
+                clearTranslationDecoration();
+            }
         })
     );
 }
@@ -159,6 +171,9 @@ async function translateSelection(): Promise<void> {
         const decorationRange = new vscode.Range(endPosition, endPosition);
 
         editor.setDecorations(translationDecorationType, [decorationRange]);
+        
+        // Track the editor that has the popup for filtering events
+        translationEditorUri = editor.document.uri;
         
         // Setup listeners to auto-dismiss the popup when focus changes
         setupDismissListeners();
