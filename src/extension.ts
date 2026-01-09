@@ -11,7 +11,7 @@ import { TranslationViewProvider } from './views';
 let statusBarItem: vscode.StatusBarItem;
 
 // Current translation engine
-let currentEngine = 'tencent';
+let currentEngine = 'baidu';
 
 // Translation providers
 const providers: Map<string, TranslationProvider> = new Map();
@@ -19,11 +19,24 @@ providers.set('tencent', new TencentTranslationProvider());
 providers.set('baidu', new BaiduTranslationProvider());
 providers.set('youdao', new YoudaoTranslationProvider());
 
+// Decoration type for inline translation display
+let translationDecorationType: vscode.TextEditorDecorationType | undefined;
+
 /**
  * Get the current translation provider
  */
 function getCurrentProvider(): TranslationProvider | undefined {
     return providers.get(currentEngine);
+}
+
+/**
+ * Clear any existing translation decoration
+ */
+function clearTranslationDecoration(): void {
+    if (translationDecorationType) {
+        translationDecorationType.dispose();
+        translationDecorationType = undefined;
+    }
 }
 
 /**
@@ -66,21 +79,28 @@ async function translateSelection(): Promise<void> {
             }
         );
 
-        // Show translation result in popup
-        const action = await vscode.window.showInformationMessage(
-            `Translation (${provider.name}): ${result}`,
-            'Copy',
-            'Replace'
+        // Clear any previous translation decoration
+        clearTranslationDecoration();
+
+        // Create decoration type for inline display below selection
+        translationDecorationType = vscode.window.createTextEditorDecorationType({
+            after: {
+                contentText: result,
+                color: new vscode.ThemeColor('editorInfo.foreground'),
+                fontStyle: 'italic',
+                margin: '0 0 0 1em'
+            },
+            isWholeLine: true
+        });
+
+        // Apply decoration to the line containing the end of selection
+        const endLine = selection.end.line;
+        const decorationRange = new vscode.Range(
+            new vscode.Position(endLine, editor.document.lineAt(endLine).text.length),
+            new vscode.Position(endLine, editor.document.lineAt(endLine).text.length)
         );
 
-        if (action === 'Copy') {
-            await vscode.env.clipboard.writeText(result);
-            vscode.window.showInformationMessage('Translation copied to clipboard');
-        } else if (action === 'Replace') {
-            await editor.edit((editBuilder) => {
-                editBuilder.replace(selection, result);
-            });
-        }
+        editor.setDecorations(translationDecorationType, [decorationRange]);
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Translation failed';
         vscode.window.showErrorMessage(message);
@@ -156,7 +176,7 @@ function updateStatusBar(): void {
 export function activate(context: vscode.ExtensionContext): void {
     // Load default engine from configuration
     const config = vscode.workspace.getConfiguration('tlcsdm.translation');
-    currentEngine = config.get<string>('defaultEngine', 'tencent');
+    currentEngine = config.get<string>('defaultEngine', 'baidu');
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -197,7 +217,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('tlcsdm.translation.defaultEngine')) {
                 const newEngine = vscode.workspace.getConfiguration('tlcsdm.translation')
-                    .get<string>('defaultEngine', 'tencent');
+                    .get<string>('defaultEngine', 'baidu');
                 if (newEngine !== currentEngine) {
                     currentEngine = newEngine;
                     updateStatusBar();

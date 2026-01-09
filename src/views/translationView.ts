@@ -66,7 +66,7 @@ export class TranslationViewProvider implements vscode.WebviewViewProvider {
 
     private _getHtmlForWebview(): string {
         const config = vscode.workspace.getConfiguration('tlcsdm.translation');
-        const defaultEngine = config.get<string>('defaultEngine', 'tencent');
+        const defaultEngine = config.get<string>('defaultEngine', 'baidu');
         const sourceLanguage = config.get<string>('sourceLanguage', 'auto');
         const targetLanguage = config.get<string>('targetLanguage', 'zh');
 
