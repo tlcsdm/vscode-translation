@@ -22,8 +22,12 @@ providers.set('youdao', new YoudaoTranslationProvider());
 // Decoration type for tooltip-style translation popup display
 let translationDecorationType: vscode.TextEditorDecorationType | undefined;
 
+// Disposables for auto-dismiss listeners
+let dismissListeners: vscode.Disposable[] = [];
+
 // Constants for translation popup styling
-const POPUP_ARROW_INDICATOR = '▼';
+// Use left-pointing arrow to indicate the popup is referencing the text on its left
+const POPUP_ARROW_INDICATOR = '◄';
 const POPUP_MARGIN = '0 0 0 0.5em';
 
 /**
@@ -34,9 +38,22 @@ function getCurrentProvider(): TranslationProvider | undefined {
 }
 
 /**
+ * Dispose dismiss listeners
+ */
+function disposeDismissListeners(): void {
+    for (const listener of dismissListeners) {
+        listener.dispose();
+    }
+    dismissListeners = [];
+}
+
+/**
  * Clear any existing translation decoration
  */
 function clearTranslationDecoration(): void {
+    // First dispose the dismiss listeners to prevent recursive calls
+    disposeDismissListeners();
+    
     if (translationDecorationType) {
         // Clear decorations from the editor first
         const editor = vscode.window.activeTextEditor;
@@ -46,6 +63,39 @@ function clearTranslationDecoration(): void {
         translationDecorationType.dispose();
         translationDecorationType = undefined;
     }
+}
+
+/**
+ * Setup listeners to auto-dismiss the translation popup
+ * The popup will be dismissed when:
+ * - Selection changes in the active editor
+ * - Active editor changes
+ * - Document content changes
+ */
+function setupDismissListeners(): void {
+    // Clear any existing listeners first
+    disposeDismissListeners();
+    
+    // Dismiss when selection changes
+    dismissListeners.push(
+        vscode.window.onDidChangeTextEditorSelection(() => {
+            clearTranslationDecoration();
+        })
+    );
+    
+    // Dismiss when active editor changes
+    dismissListeners.push(
+        vscode.window.onDidChangeActiveTextEditor(() => {
+            clearTranslationDecoration();
+        })
+    );
+    
+    // Dismiss when document content changes
+    dismissListeners.push(
+        vscode.workspace.onDidChangeTextDocument(() => {
+            clearTranslationDecoration();
+        })
+    );
 }
 
 /**
@@ -109,6 +159,9 @@ async function translateSelection(): Promise<void> {
         const decorationRange = new vscode.Range(endPosition, endPosition);
 
         editor.setDecorations(translationDecorationType, [decorationRange]);
+        
+        // Setup listeners to auto-dismiss the popup when focus changes
+        setupDismissListeners();
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Translation failed';
         vscode.window.showErrorMessage(message);
@@ -242,4 +295,5 @@ export function activate(context: vscode.ExtensionContext): void {
  */
 export function deactivate(): void {
     // Clean up resources
+    clearTranslationDecoration();
 }
