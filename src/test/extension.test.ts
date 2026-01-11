@@ -5,11 +5,11 @@ suite('Extension Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('unknowIfGuestInDream.vscode-translation'));
+        assert.ok(vscode.extensions.getExtension('unknowIfGuestInDream.tlcsdm-translation'));
     });
 
     test('Commands should be registered', async () => {
-        const extension = vscode.extensions.getExtension('unknowIfGuestInDream.vscode-translation');
+        const extension = vscode.extensions.getExtension('unknowIfGuestInDream.tlcsdm-translation');
         await extension?.activate();
 
         const commands = await vscode.commands.getCommands(true);
