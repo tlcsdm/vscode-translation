@@ -37,7 +37,7 @@ export class BaiduTranslationProvider implements TranslationProvider {
         const targetLanguage = LanguageMap.baidu[to] || 'zh';
 
         const salt = Date.now().toString();
-        const sign = this.md5(`${appId}${text}${salt}${secretKey}`);
+        const sign = this.hmacMd5(`${appId}${text}${salt}`, secretKey);
 
         const params = new URLSearchParams({
             q: text,
@@ -83,7 +83,7 @@ export class BaiduTranslationProvider implements TranslationProvider {
         });
     }
 
-    private md5(text: string): string {
-        return crypto.createHash('md5').update(text, 'utf8').digest('hex');
+    private hmacMd5(text: string, key: string): string {
+        return crypto.createHmac('md5', key).update(text, 'utf8').digest('hex');
     }
 }
