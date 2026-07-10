@@ -188,6 +188,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "postinstall": "node scripts/postinstall.js",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test --config ./.vscode-test.json"
@@ -201,8 +202,17 @@
     "@vscode/test-electron": "^3.0.0",
     "@vscode/vsce": "^3.9.2",
     "eslint": "^10.6.0",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.63.0"
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.63.0",
+    "typescript-v6": "npm:typescript@~6.0.3"
+  },
+  "overrides": {
+    "typescript-eslint": {
+      "typescript": "~6.0.3"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "typescript": "~6.0.3"
+    }
   },
   "license": "MIT"
 }
