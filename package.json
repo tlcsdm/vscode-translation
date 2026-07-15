@@ -212,6 +212,12 @@
     },
     "@typescript-eslint/typescript-estree": {
       "typescript": "~6.0.3"
+    },
+    "@typescript-eslint/parser": {
+      "typescript": "~6.0.3"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "typescript": "~6.0.3"
     }
   },
   "license": "MIT"
