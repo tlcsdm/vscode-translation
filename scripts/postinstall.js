@@ -30,6 +30,7 @@ if (!fs.existsSync(ts6Src)) {
 const destinations = [
     path.join(root, 'node_modules', 'typescript-eslint', 'node_modules'),
     path.join(root, 'node_modules', 'ts-api-utils', 'node_modules'),
+    path.join(root, 'node_modules', '@typescript-eslint', 'node_modules'),
 ];
 
 for (const destDir of destinations) {
